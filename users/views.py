@@ -60,8 +60,8 @@ class UserView(APIView):
     def put(self, request):
         user = request.user
 
+        # Update user email
         if 'email' in request.data:
-
             serializer = ValidateEmail(data=request.data)
             if not serializer.is_valid():
                 return Response(
@@ -87,6 +87,7 @@ class UserView(APIView):
                     }
                 )
 
+        # Update user password
         if 'old_password' in request.data and 'new_password' in request.data:
             serializer = ValidatePassword(data=request.data)
             if not serializer.is_valid():
