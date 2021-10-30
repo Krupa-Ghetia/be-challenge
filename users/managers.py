@@ -1,5 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from users.exceptions import PasswordMismatchException
+from datetime import datetime
+
 
 class CustomUserManager(BaseUserManager):
 
@@ -14,12 +16,14 @@ class CustomUserManager(BaseUserManager):
 
     def update_user_email(self, user, email):
         user.email = self.normalize_email(email)
+        user.row_last_updated = datetime.now()
         user.save()
 
     def update_user_password(self, user, old_password, new_password):
         if not user.check_password(old_password):
             raise PasswordMismatchException('Password Mismatch')
         user.set_password(new_password)
+        user.row_last_updated = datetime.now()
         user.save()
 
     def create_superuser(self, username, email, password, **extra_fields):

@@ -10,12 +10,13 @@ def get_token_for_user(user):
     }
 
 
-def normalize_email(email):
-    email = email or ''
-    try:
-        email_name, domain_part = email.strip().rsplit('@', 1)
-    except ValueError:
-        pass
-    else:
-        email = email_name + '@' + domain_part.lower()
-    return email
+def user_is_instructor(user):
+    if user.is_instructor:
+        return True
+    return False
+
+
+def user_is_author(user, object_to_verify):
+    if user.id == object_to_verify.created_by_id:
+        return True
+    return False
