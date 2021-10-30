@@ -3,7 +3,6 @@ from django.shortcuts import get_object_or_404
 
 from users.models import User
 from users.managers import CustomUserManager
-from users.utils import normalize_email
 
 
 class UserRepository:
@@ -21,6 +20,7 @@ class UserRepository:
     def user_already_exists(data):
         if User.objects.filter(Q(username=data['username']) | Q(email=data['email'])).exists():
             return True
+        return False
 
     @staticmethod
     def update_user_email(user_id, email):

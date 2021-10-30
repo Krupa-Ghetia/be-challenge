@@ -13,4 +13,3 @@ class User(AbstractUser):
     row_last_updated = models.DateTimeField(default=datetime.now)
 
     objects = CustomUserManager()
-
