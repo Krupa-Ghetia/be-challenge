@@ -2,7 +2,6 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime
 
 from subjects.models import Subjects
-from users.repository.users import UserRepository
 
 
 class SubjectsRepository:
