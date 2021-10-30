@@ -1,6 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
-from django.utils.translation import ugettext_lazy as _
-
+from users.exceptions import PasswordMismatchException
 
 class CustomUserManager(BaseUserManager):
 
@@ -12,6 +11,16 @@ class CustomUserManager(BaseUserManager):
         user.save()
 
         return user
+
+    def update_user_email(self, user, email):
+        user.email = self.normalize_email(email)
+        user.save()
+
+    def update_user_password(self, user, old_password, new_password):
+        if not user.check_password(old_password):
+            raise PasswordMismatchException('Password Mismatch')
+        user.set_password(new_password)
+        user.save()
 
     def create_superuser(self, username, email, password, **extra_fields):
 

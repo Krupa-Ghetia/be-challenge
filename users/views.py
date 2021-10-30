@@ -1,15 +1,15 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from users.serializers.users import UserDtoSerializer
+from users.serializers.users import UserDtoSerializer, ValidateEmail, ValidatePassword
 from users.utils import get_token_for_user
 from users.repository.users import UserRepository
+from users.exceptions import PasswordMismatchException
 
 
 class UserRegistrationView(APIView):
-
     permission_classes = (AllowAny,)
 
     def post(self, request):
@@ -47,5 +47,93 @@ class UserRegistrationView(APIView):
 
         except Exception as e:
             return Response(
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'error': e
+                }
+            )
+
+
+class UserView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def put(self, request):
+        user = request.user
+
+        if 'email' in request.data:
+
+            serializer = ValidateEmail(data=request.data)
+            if not serializer.is_valid():
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={
+                        'error': serializer.errors
+                    }
+                )
+
+            validated_data = serializer.validated_data
+
+            try:
+                UserRepository.update_user_email(user.id, validated_data['email'])
+                return Response(
+                    status=status.HTTP_200_OK
+                )
+
+            except Exception as e:
+                return Response(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    data={
+                        'error': e
+                    }
+                )
+
+        if 'old_password' in request.data and 'new_password' in request.data:
+            serializer = ValidatePassword(data=request.data)
+            if not serializer.is_valid():
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={
+                        'error': serializer.errors
+                    }
+                )
+
+            validated_data = serializer.validated_data
+
+            try:
+                UserRepository.update_user_password(user.id, validated_data['old_password'],
+                                                    validated_data['new_password'])
+                return Response(
+                    status=status.HTTP_200_OK
+                )
+
+            except PasswordMismatchException as e:
+                return Response(
+                    status=e.status_code,
+                    data={
+                        'error': e.default_detail
+                    }
+                )
+
+            except Exception as e:
+                return Response(
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    data={
+                        'error': e
+                    }
+                )
+
+        if 'old_password' not in request.data:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={
+                    'error': 'Old password is required'
+                }
+            )
+
+        if 'new_password' not in request.data:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={
+                    'error': 'New password is required'
+                }
             )
