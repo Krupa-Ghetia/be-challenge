@@ -25,9 +25,12 @@ class UserRepository:
     @staticmethod
     def update_user_email(user_id, email):
         user = UserRepository.get_user_object(user_id)
-        CustomUserManager().update_user_email(user, email)
+        user = CustomUserManager().update_user_email(user, email)
+        return user
+
 
     @staticmethod
     def update_user_password(user_id, old_password, new_password):
         user = UserRepository.get_user_object(user_id)
-        CustomUserManager().update_user_password(user, old_password, new_password)
+        user = CustomUserManager().update_user_password(user, old_password, new_password)
+        return user

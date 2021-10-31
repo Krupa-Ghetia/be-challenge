@@ -7,7 +7,7 @@ class SubjectsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subjects
-        fields = ['name', 'created_by']
+        fields = ['id', 'name', 'created_by']
 
 
 class ValidateSubjectName(serializers.Serializer):

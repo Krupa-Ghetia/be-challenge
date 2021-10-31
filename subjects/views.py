@@ -52,10 +52,11 @@ class SubjectsView(APIView):
                     }
                 )
             subject = SubjectsRepository.create_subject(request.user, validated_data)
+
             return Response(
                 status=status.HTTP_200_OK,
                 data={
-                    'subject': subject.id
+                    'id': subject.id,
                 }
             )
 
@@ -97,7 +98,7 @@ class SubjectsView(APIView):
             return Response(
                 status=status.HTTP_200_OK,
                 data={
-                    'subject': subject.id
+                    'id': subject.id
                 }
             )
 
@@ -118,7 +119,14 @@ class SubjectsView(APIView):
                     'message': "PERMISSION DENIED! You should be an authorized instructur to delete the subject"
                 }
             )
+        try:
+            subject.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        subject = SubjectsRepository.get_subject_by_id(pk)
-        subject.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'error': e
+                }
+            )
