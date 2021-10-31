@@ -18,6 +18,7 @@ class CustomUserManager(BaseUserManager):
         user.email = self.normalize_email(email)
         user.row_last_updated = datetime.now()
         user.save()
+        return user
 
     def update_user_password(self, user, old_password, new_password):
         if not user.check_password(old_password):
@@ -25,6 +26,7 @@ class CustomUserManager(BaseUserManager):
         user.set_password(new_password)
         user.row_last_updated = datetime.now()
         user.save()
+        return user
 
     def create_superuser(self, username, email, password, **extra_fields):
 

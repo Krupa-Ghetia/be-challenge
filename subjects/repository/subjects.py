@@ -12,6 +12,11 @@ class SubjectsRepository:
         return subject
 
     @staticmethod
+    def get_or_create_subject(user, name):
+        subject = Subjects.objects.get_or_create(created_by_id=user.id, name=name)
+        return subject
+
+    @staticmethod
     def subject_already_exists(data):
         if Subjects.objects.filter(name=data['name']).exists():
             return True

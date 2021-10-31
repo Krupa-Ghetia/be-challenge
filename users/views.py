@@ -74,9 +74,12 @@ class UserView(APIView):
             validated_data = serializer.validated_data
 
             try:
-                UserRepository.update_user_email(user.id, validated_data['email'])
+                user = UserRepository.update_user_email(user.id, validated_data['email'])
                 return Response(
-                    status=status.HTTP_200_OK
+                    status=status.HTTP_200_OK,
+                    data={
+                        "id": user.id
+                    }
                 )
 
             except Exception as e:
@@ -101,10 +104,13 @@ class UserView(APIView):
             validated_data = serializer.validated_data
 
             try:
-                UserRepository.update_user_password(user.id, validated_data['old_password'],
-                                                    validated_data['new_password'])
+                user = UserRepository.update_user_password(user.id, validated_data['old_password'],
+                                                           validated_data['new_password'])
                 return Response(
-                    status=status.HTTP_200_OK
+                    status=status.HTTP_200_OK,
+                    data={
+                        "id": user.id
+                    }
                 )
 
             except PasswordMismatchException as e:
