@@ -1,6 +1,4 @@
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404
 from datetime import datetime
 
 from tags.models import Tags
