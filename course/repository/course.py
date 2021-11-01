@@ -59,6 +59,10 @@ class CourseRepository:
         return Course.objects.all()
 
     @staticmethod
+    def get_most_viewed_courses():
+        return Course.objects.filter(view_count__gt=0).order_by('-view_count')
+
+    @staticmethod
     def update_course_name(course, data):
         course.name = data['name']
         course.row_last_updated = datetime.now()
@@ -77,6 +81,13 @@ class CourseRepository:
         for subject_name in data['subjects']:
             subject = SubjectsRepository.get_or_create_subject(user, subject_name)
             course.subjects.add(subject)
+        course.row_last_updated = datetime.now()
+        course.save()
+        return course
+
+    @staticmethod
+    def update_course_view_count(course):
+        course.view_count += 1
         course.row_last_updated = datetime.now()
         course.save()
         return course

@@ -17,6 +17,7 @@ class CourseView(APIView):
         try:
             if pk:
                 course = CourseRepository.get_course_by_id(pk)
+                course = CourseRepository.update_course_view_count(course)
                 serializer = CourseSerializer(course)
             elif subject:
                 courses = CourseRepository.get_courses_by_subject(subject, request.user)
@@ -36,7 +37,7 @@ class CourseView(APIView):
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
-                    'errors': 'Lesson does not exist!'
+                    'errors': 'Course does not exist!'
                 }
             )
         except Exception as e:
@@ -175,5 +176,28 @@ class CourseView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
                     'error': e
+                }
+            )
+
+
+class CourseAnalyticsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        try:
+            courses = CourseRepository.get_most_viewed_courses()
+            serializer = CourseSerializer(courses, many=True)
+
+            return Response(
+                status=status.HTTP_200_OK,
+                data={
+                    'courses': serializer.data
+                }
+            )
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'errors': e
                 }
             )

@@ -8,6 +8,7 @@ from subjects.models import Subjects
 class Course(models.Model):
     name = models.CharField(max_length=255, null=False, blank=False, unique=True)
     is_active = models.BooleanField(default=True)
+    view_count = models.IntegerField(default=0)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     subjects = models.ManyToManyField(Subjects)
     row_created = models.DateTimeField(default=datetime.now)
