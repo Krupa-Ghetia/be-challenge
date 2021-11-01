@@ -19,6 +19,11 @@ class TagRepository:
         return tag
 
     @staticmethod
+    def get_or_create_tag(tag_name, user):
+        tag, status = Tags.objects.get_or_create(name=tag_name, created_by_id=user.id)
+        return tag
+
+    @staticmethod
     def get_tag_by_id(tag_id):
         tag = get_object_or_404(Tags, id=tag_id)
         return tag

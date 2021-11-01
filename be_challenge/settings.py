@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'course',
     'lessons',
     'tags',
+    'videos',
 ]
 
 MIDDLEWARE = [
