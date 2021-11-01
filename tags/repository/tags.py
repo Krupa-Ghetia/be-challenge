@@ -19,3 +19,13 @@ class TagRepository:
         tag = Tags(name=data['name'], created_by_id=user.id)
         tag.save()
         return tag
+
+    @staticmethod
+    def get_tag_by_id(tag_id):
+        tag = get_object_or_404(Tags, id=tag_id)
+        return tag
+
+    @staticmethod
+    def get_all_tags():
+        tags = Tags.objects.all()
+        return tags

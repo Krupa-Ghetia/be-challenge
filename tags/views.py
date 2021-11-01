@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from django import http
+from django.http import Http404
 
 from tags.repository.tags import TagRepository
 from tags.serializers.tags import TagSerializer, ValidateTagName
@@ -12,8 +12,33 @@ from users.utils import user_is_instructor, user_is_author
 class TagsView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, pk):
-        pass
+    def get(self, request, pk=None):
+        try:
+            if pk:
+                tag = TagRepository.get_tag_by_id(pk)
+                serializer = TagSerializer(tag)
+            else:
+                tags = TagRepository.get_all_tags()
+                serializer = TagSerializer(tags, many=True)
+
+            return Response(
+                status=status.HTTP_200_OK,
+                data=serializer.data
+            )
+        except Http404 as e:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={
+                    'errors': 'Tag does not exist!'
+                }
+            )
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'errors': e
+                }
+            )
 
     def post(self, request):
         if not user_is_instructor(request.user):

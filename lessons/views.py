@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from django import http
+from django.http import Http404
 
 from lessons.repository.lessons import LessonsRepository
 from lessons.serializers.lessons import (
@@ -64,7 +64,7 @@ class LessonView(APIView):
                 }
             )
 
-        except http.Http404 as e:
+        except Http404 as e:
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
@@ -140,7 +140,7 @@ class LessonView(APIView):
                     'id': lesson.id,
                 }
             )
-        except http.Http404 as e:
+        except Http404 as e:
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
