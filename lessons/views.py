@@ -2,31 +2,32 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django import http
 
-from course.repository.course import CourseRepository
-from course.serializers.course import (
-    CourseSerializer, CourseDtoSerializer, ValidateCourseName, ValidateCourseActiveStatus, ValidateCourseSubjects)
+from lessons.repository.lessons import LessonsRepository
+from lessons.serializers.lessons import (
+    LessonsSerializer, LessonsDtoSerializer, ValidateLessonName, ValidateLessonActiveStatus, ValidateLessonCourses)
 from users.utils import user_is_instructor, user_is_author
 
 
-class CourseView(APIView):
+class LessonView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, subject=None, pk=None):
+    def get(self, request, course=None, pk=None):
         if pk:
-            course = CourseRepository.get_course_by_id(pk)
-            serializer = CourseSerializer(course)
-        elif subject:
-            courses = CourseRepository.get_courses_by_subject(subject, request.user)
-            serializer = CourseSerializer(courses, many=True)
+            lesson = LessonsRepository.get_lesson_by_id(pk)
+            serializer = LessonsSerializer(lesson)
+        elif course:
+            lessons = LessonsRepository.get_lessons_by_course(course, request.user)
+            serializer = LessonsSerializer(lessons, many=True)
         else:
-            courses = CourseRepository.get_all_courses()
-            serializer = CourseSerializer(courses, many=True)
+            lessons = LessonsRepository.get_all_lessons(request.user)
+            serializer = LessonsSerializer(lessons, many=True)
 
         return Response(
             status=status.HTTP_200_OK,
             data={
-                'courses': serializer.data
+                'lessons': serializer.data
             }
         )
 
@@ -35,11 +36,11 @@ class CourseView(APIView):
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
-                    'message': "PERMISSION DENIED! You should be an instructur to add new courses"
+                    'message': "PERMISSION DENIED! You should be an instructur to add new lessons"
                 }
             )
 
-        serializer = CourseDtoSerializer(data=request.data)
+        serializer = LessonsDtoSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
@@ -48,18 +49,26 @@ class CourseView(APIView):
         validated_data = serializer.validated_data
 
         try:
-            if CourseRepository.course_already_exists(validated_data):
+            if LessonsRepository.lesson_already_exists(validated_data):
                 return Response(
                     status=status.HTTP_409_CONFLICT,
                     data={
-                        "msg": "Course already exists!"
+                        "msg": "Lesson already exists!"
                     }
                 )
-            course = CourseRepository.create_course(request.user, validated_data)
+            lesson = LessonsRepository.create_lesson(request.user, validated_data)
             return Response(
                 status=status.HTTP_200_OK,
                 data={
-                    'id': course.id,
+                    'id': lesson.id,
+                }
+            )
+
+        except http.Http404 as e:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={
+                    'error': 'Course object not found'
                 }
             )
 
@@ -72,19 +81,19 @@ class CourseView(APIView):
             )
 
     def put(self, request, pk):
-        course = CourseRepository.get_course_by_id(pk)
-        if not user_is_instructor(request.user) or not user_is_author(request.user, course):
+        lesson = LessonsRepository.get_lesson_by_id(pk)
+        if not user_is_instructor(request.user) or not user_is_author(request.user, lesson):
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
-                    'message': "PERMISSION DENIED! You should be an authorized instructur to update the course"
+                    'message': "PERMISSION DENIED! You should be an authorized instructur to update the lesson"
                 }
             )
 
         try:
-            # Update course name
+            # Update lesson name
             if 'name' in request.data:
-                serializer = ValidateCourseName(data=request.data)
+                serializer = ValidateLessonName(data=request.data)
                 if not serializer.is_valid():
                     return Response(
                         status=status.HTTP_400_BAD_REQUEST,
@@ -92,18 +101,18 @@ class CourseView(APIView):
                     )
                 validated_data = serializer.validated_data
 
-                if CourseRepository.course_already_exists(validated_data):
+                if LessonsRepository.lesson_already_exists(validated_data):
                     return Response(
                         status=status.HTTP_409_CONFLICT,
                         data={
-                            "msg": "Course already exists!"
+                            "msg": "Lesson already exists!"
                         }
                     )
-                course = CourseRepository.update_course_name(course, validated_data)
+                lesson = LessonsRepository.update_lesson_name(lesson, validated_data)
 
             # Update course active status
             if 'is_active' in request.data:
-                serializer = ValidateCourseActiveStatus(data=request.data)
+                serializer = ValidateLessonActiveStatus(data=request.data)
                 if not serializer.is_valid():
                     return Response(
                         status=status.HTTP_400_BAD_REQUEST,
@@ -111,11 +120,11 @@ class CourseView(APIView):
                     )
                 validated_data = serializer.validated_data
 
-                course = CourseRepository.update_course_active_status(course, validated_data)
+                lesson = LessonsRepository.update_lesson_active_status(lesson, validated_data)
 
             # Add course subjects
-            if 'subjects' in request.data:
-                serializer = ValidateCourseSubjects(data=request.data)
+            if 'courses' in request.data:
+                serializer = ValidateLessonCourses(data=request.data)
                 if not serializer.is_valid():
                     return Response(
                         status=status.HTTP_400_BAD_REQUEST,
@@ -123,12 +132,19 @@ class CourseView(APIView):
                     )
                 validated_data = serializer.validated_data
 
-                course = CourseRepository.update_course_subjects(course, request.user, validated_data)
+                lesson = LessonsRepository.update_lesson_courses(lesson, validated_data)
 
             return Response(
                 status=status.HTTP_200_OK,
                 data={
-                    'id': course.id,
+                    'id': lesson.id,
+                }
+            )
+        except http.Http404 as e:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={
+                    'error': 'Course object not found'
                 }
             )
         except Exception as e:
@@ -140,17 +156,17 @@ class CourseView(APIView):
             )
 
     def delete(self, request, pk):
-        course = CourseRepository.get_course_by_id(pk)
-        if not user_is_instructor(request.user) or not user_is_author(request.user, course):
+        lesson = LessonsRepository.get_lesson_by_id(pk)
+        if not user_is_instructor(request.user) or not user_is_author(request.user, lesson):
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
-                    'message': "PERMISSION DENIED! You should be an authorized instructur to delete the course"
+                    'message': "PERMISSION DENIED! You should be an authorized instructur to delete the lesson"
                 }
             )
 
         try:
-            course.delete()
+            lesson.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         except Exception as e:
