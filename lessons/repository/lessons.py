@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
+from datetime import datetime
 
 
 from lessons.models import Lessons
@@ -55,12 +56,14 @@ class LessonsRepository:
     @staticmethod
     def update_lesson_name(lesson, data):
         lesson.name = data['name']
+        lesson.row_last_updated = datetime.now()
         lesson.save()
         return lesson
 
     @staticmethod
     def update_lesson_active_status(lesson, data):
         lesson.is_active = data['is_active']
+        lesson.row_last_updated = datetime.now()
         lesson.save()
         return lesson
 
@@ -69,4 +72,5 @@ class LessonsRepository:
         for course_name in data['courses']:
             course = CourseRepository.get_course_by_name(course_name)
             lesson.courses.add(course)
+        lesson.row_last_updated = datetime.now()
         return lesson
