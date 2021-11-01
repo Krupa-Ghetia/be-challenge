@@ -30,6 +30,14 @@ class LessonsRepository:
         return get_object_or_404(Lessons, id=lesson_id)
 
     @staticmethod
+    def get_lesson_by_name(lesson_name):
+        try:
+            lesson = Lessons.objects.get(name=lesson_name)
+            return lesson
+        except ObjectDoesNotExist:
+            raise Http404("Lesson object does not exist")
+
+    @staticmethod
     def get_lessons_by_course(course_id, user):
         try:
             lessons = Lessons.objects.filter(courses__id=course_id)
