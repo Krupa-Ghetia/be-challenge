@@ -84,4 +84,22 @@ class TagsView(APIView):
         pass
 
     def delete(self, request, pk):
-        pass
+        tag = TagRepository.get_tag_by_id(pk)
+        if not user_is_instructor(request.user) or not user_is_author(request.user, tag):
+            return Response(
+                status=status.HTTP_403_FORBIDDEN,
+                data={
+                    'message': "PERMISSION DENIED! You should be an authorized instructur to delete the tag"
+                }
+            )
+        try:
+            tag.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'error': e
+                }
+            )
