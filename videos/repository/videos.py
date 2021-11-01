@@ -29,3 +29,13 @@ class VideoRepository:
             lesson = LessonsRepository.get_lesson_by_name(lesson_name)
             video.lessons.add(lesson)
         return video
+
+    @staticmethod
+    def get_video_by_id(video_id):
+        video = get_object_or_404(Videos, id=video_id)
+        return video
+
+    @staticmethod
+    def get_all_videos():
+        videos = Videos.objects.all()
+        return videos

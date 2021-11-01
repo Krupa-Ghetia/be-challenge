@@ -14,8 +14,32 @@ from users.utils import user_is_instructor, user_is_author
 class VideoView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, pk):
-        pass
+    def get(self, request, pk=None):
+        try:
+            if pk:
+                video = VideoRepository.get_video_by_id(pk)
+                serializer = VideoSerializer(video)
+            else:
+                videos = VideoRepository.get_all_videos()
+                serializer = VideoSerializer(videos, many=True)
+            return Response(
+                status=status.HTTP_200_OK,
+                data=serializer.data
+            )
+        except Http404 as e:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={
+                    'errors': 'Video does not exist!'
+                }
+            )
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'errors': e
+                }
+            )
 
     def post(self, request):
         if not user_is_instructor(request.user):
