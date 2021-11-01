@@ -39,3 +39,40 @@ class VideoRepository:
     def get_all_videos():
         videos = Videos.objects.all()
         return videos
+
+    @staticmethod
+    def update_video_title(video, data):
+        video.title = data['title']
+        video.row_last_updated = datetime.now()
+        video.save()
+        return video
+
+    @staticmethod
+    def update_video_link(video, data):
+        video.link = data['link']
+        video.row_last_updated = datetime.now()
+        video.save()
+        return video
+
+    @staticmethod
+    def update_video_active_status(video, data):
+        video.is_active = data['is_active']
+        video.row_last_updated = datetime.now()
+        video.save()
+        return video
+
+    @staticmethod
+    def update_video_tags(video, data, user):
+        for tag_name in data['tags']:
+            tag = TagRepository.get_or_create_tag(tag_name, user)
+            video.tags.add(tag)
+        video.row_last_updated = datetime.now()
+        return video
+
+    @staticmethod
+    def update_video_lessons(video, data):
+        for lesson_name in data['lessons']:
+            lesson = LessonsRepository.get_lesson_by_name(lesson_name)
+            video.lessons.add(lesson)
+        video.row_last_updated = datetime.now()
+        return video
