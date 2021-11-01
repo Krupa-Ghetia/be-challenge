@@ -18,6 +18,7 @@ class VideoView(APIView):
         try:
             if pk:
                 video = VideoRepository.get_video_by_id(pk)
+                video = VideoRepository.update_video_view_count(video)
                 serializer = VideoSerializer(video)
             else:
                 videos = VideoRepository.get_all_videos()
@@ -202,5 +203,34 @@ class VideoView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
                     'error': e
+                }
+            )
+
+
+class VideoAnalyticsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        if not user_is_instructor(request.user):
+            return Response(
+                status=status.HTTP_403_FORBIDDEN,
+                data={
+                    'message': "PERMISSION DENIED! You should be an instructur to view analytics"
+                }
+            )
+
+        try:
+            videos = VideoRepository.get_most_viewed_videos()
+            serializer = VideoSerializer(videos, many=True)
+
+            return Response(
+                status=status.HTTP_200_OK,
+                data=serializer.data
+            )
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'errors': e
                 }
             )

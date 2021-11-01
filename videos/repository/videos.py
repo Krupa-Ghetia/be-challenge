@@ -41,6 +41,10 @@ class VideoRepository:
         return videos
 
     @staticmethod
+    def get_most_viewed_videos():
+        return Videos.objects.filter(view_count__gt=0).order_by('-view_count')
+
+    @staticmethod
     def update_video_title(video, data):
         video.title = data['title']
         video.row_last_updated = datetime.now()
@@ -75,4 +79,11 @@ class VideoRepository:
             lesson = LessonsRepository.get_lesson_by_name(lesson_name)
             video.lessons.add(lesson)
         video.row_last_updated = datetime.now()
+        return video
+
+    @staticmethod
+    def update_video_view_count(video):
+        video.view_count += 1
+        video.row_last_updated = datetime.now()
+        video.save()
         return video

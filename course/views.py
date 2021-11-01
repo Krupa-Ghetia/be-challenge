@@ -184,6 +184,14 @@ class CourseAnalyticsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
+        if not user_is_instructor(request.user):
+            return Response(
+                status=status.HTTP_403_FORBIDDEN,
+                data={
+                    'message': "PERMISSION DENIED! You should be an instructur to view analytics"
+                }
+            )
+
         try:
             courses = CourseRepository.get_most_viewed_courses()
             serializer = CourseSerializer(courses, many=True)
