@@ -1,6 +1,7 @@
-from django.shortcuts import get_object_or_404, get_list_or_404
+from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django.core.exceptions import ObjectDoesNotExist
+from datetime import datetime
 
 
 from course.models import Course
@@ -60,12 +61,14 @@ class CourseRepository:
     @staticmethod
     def update_course_name(course, data):
         course.name = data['name']
+        course.row_last_updated = datetime.now()
         course.save()
         return course
 
     @staticmethod
     def update_course_active_status(course, data):
         course.is_active = data['is_active']
+        course.row_last_updated = datetime.now()
         course.save()
         return course
 
@@ -74,5 +77,7 @@ class CourseRepository:
         for subject_name in data['subjects']:
             subject, status = SubjectsRepository.get_or_create_subject(user, subject_name)
             course.subjects.add(subject)
+        course.row_last_updated = datetime.now()
+        course.save()
         return course
 
