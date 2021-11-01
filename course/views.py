@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django.http import Http404
 
 from course.repository.course import CourseRepository
 from course.serializers.course import (
@@ -13,22 +14,38 @@ class CourseView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, subject=None, pk=None):
-        if pk:
-            course = CourseRepository.get_course_by_id(pk)
-            serializer = CourseSerializer(course)
-        elif subject:
-            courses = CourseRepository.get_courses_by_subject(subject, request.user)
-            serializer = CourseSerializer(courses, many=True)
-        else:
-            courses = CourseRepository.get_all_courses()
-            serializer = CourseSerializer(courses, many=True)
+        try:
+            if pk:
+                course = CourseRepository.get_course_by_id(pk)
+                serializer = CourseSerializer(course)
+            elif subject:
+                courses = CourseRepository.get_courses_by_subject(subject, request.user)
+                serializer = CourseSerializer(courses, many=True)
+            else:
+                courses = CourseRepository.get_all_courses()
+                serializer = CourseSerializer(courses, many=True)
 
-        return Response(
-            status=status.HTTP_200_OK,
-            data={
-                'courses': serializer.data
-            }
-        )
+            return Response(
+                status=status.HTTP_200_OK,
+                data={
+                    'courses': serializer.data
+                }
+            )
+
+        except Http404 as e:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={
+                    'errors': 'Lesson does not exist!'
+                }
+            )
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'errors': e
+                }
+            )
 
     def post(self, request):
         if not user_is_instructor(request.user):

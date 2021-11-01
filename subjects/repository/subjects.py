@@ -13,7 +13,9 @@ class SubjectsRepository:
 
     @staticmethod
     def get_or_create_subject(user, name):
-        subject = Subjects.objects.get_or_create(created_by_id=user.id, name=name)
+        if Subjects.objects.filter(name=name).exists():
+            return Subjects.objects.get(name=name)
+        subject = Subjects.objects.create(name=name, created_by_id=user.id)
         return subject
 
     @staticmethod

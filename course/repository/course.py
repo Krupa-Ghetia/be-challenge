@@ -16,7 +16,7 @@ class CourseRepository:
         course.save()
 
         for subject_name in data['subjects']:
-            subject, status = SubjectsRepository.get_or_create_subject(user, subject_name)
+            subject = SubjectsRepository.get_or_create_subject(user, subject_name)
             course.subjects.add(subject)
         return course
 
@@ -75,7 +75,7 @@ class CourseRepository:
     @staticmethod
     def update_course_subjects(course, user, data):
         for subject_name in data['subjects']:
-            subject, status = SubjectsRepository.get_or_create_subject(user, subject_name)
+            subject = SubjectsRepository.get_or_create_subject(user, subject_name)
             course.subjects.add(subject)
         course.row_last_updated = datetime.now()
         course.save()

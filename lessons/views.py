@@ -14,22 +14,38 @@ class LessonView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, course=None, pk=None):
-        if pk:
-            lesson = LessonsRepository.get_lesson_by_id(pk)
-            serializer = LessonsSerializer(lesson)
-        elif course:
-            lessons = LessonsRepository.get_lessons_by_course(course, request.user)
-            serializer = LessonsSerializer(lessons, many=True)
-        else:
-            lessons = LessonsRepository.get_all_lessons(request.user)
-            serializer = LessonsSerializer(lessons, many=True)
+        try:
+            if pk:
+                lesson = LessonsRepository.get_lesson_by_id(pk)
+                serializer = LessonsSerializer(lesson)
+            elif course:
+                lessons = LessonsRepository.get_lessons_by_course(course, request.user)
+                serializer = LessonsSerializer(lessons, many=True)
+            else:
+                lessons = LessonsRepository.get_all_lessons(request.user)
+                serializer = LessonsSerializer(lessons, many=True)
 
-        return Response(
-            status=status.HTTP_200_OK,
-            data={
-                'lessons': serializer.data
-            }
-        )
+            return Response(
+                status=status.HTTP_200_OK,
+                data={
+                    'lessons': serializer.data
+                }
+            )
+
+        except Http404 as e:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={
+                    'errors': 'Lesson does not exist!'
+                }
+            )
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'errors': e
+                }
+            )
 
     def post(self, request):
         if not user_is_instructor(request.user):
