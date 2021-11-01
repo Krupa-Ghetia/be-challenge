@@ -13,14 +13,11 @@ class CourseView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, subject=None, pk=None):
-        if subject and pk:
-            course = CourseRepository.get_course_by_subject_and_course_id(subject, pk)
-            serializer = CourseSerializer(course)
-        elif pk:
+        if pk:
             course = CourseRepository.get_course_by_id(pk)
             serializer = CourseSerializer(course)
         elif subject:
-            courses = CourseRepository.get_courses_by_subject(subject)
+            courses = CourseRepository.get_courses_by_subject(subject, request.user)
             serializer = CourseSerializer(courses, many=True)
         else:
             courses = CourseRepository.get_all_courses()
@@ -80,7 +77,7 @@ class CourseView(APIView):
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
-                    'message': "PERMISSION DENIED! You should be an authorized instructur to delete the course"
+                    'message': "PERMISSION DENIED! You should be an authorized instructur to update the course"
                 }
             )
 

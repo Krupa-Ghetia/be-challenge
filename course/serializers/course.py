@@ -13,7 +13,6 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class CourseDtoSerializer(serializers.Serializer):
-
     name = serializers.CharField(min_length=3, max_length=255)
     is_active = serializers.BooleanField(default=True)
     subjects = serializers.ListField(allow_empty=True)

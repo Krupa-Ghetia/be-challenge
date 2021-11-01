@@ -1,5 +1,7 @@
 from django.shortcuts import get_object_or_404, get_list_or_404
-from datetime import datetime
+from django.http import Http404
+from django.core.exceptions import ObjectDoesNotExist
+
 
 from course.models import Course
 from subjects.repository.subjects import SubjectsRepository
@@ -28,8 +30,24 @@ class CourseRepository:
         return get_object_or_404(Course, id=course_id)
 
     @staticmethod
-    def get_courses_by_subject(subject_id):
-        return get_list_or_404(Course, subjects__id=subject_id)
+    def get_course_by_name(course_name):
+        try:
+            course = Course.objects.get(name=course_name)
+            return course
+        except ObjectDoesNotExist:
+            raise Http404('Course does not exist')
+
+    @staticmethod
+    def get_courses_by_subject(subject_id, user):
+        try:
+            courses = Course.objects.filter(subjects__id=subject_id)
+        except ObjectDoesNotExist:
+            raise Http404("Subject does not exist")
+
+        if not user.is_instructor:
+            courses = courses.filter(is_active=True)
+            return courses
+        return courses
 
     @staticmethod
     def get_course_by_subject_and_course_id(subject_id, course_id):

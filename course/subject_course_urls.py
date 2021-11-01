@@ -6,5 +6,4 @@ from .views import CourseView
 
 urlpatterns = [
     path('courses/', csrf_exempt(CourseView.as_view()), name='subject_courses'),
-    path('courses/<int:pk>', csrf_exempt(CourseView.as_view()), name='subject_course'),
 ]
