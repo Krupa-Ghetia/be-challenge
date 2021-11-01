@@ -29,3 +29,10 @@ class TagRepository:
     def get_all_tags():
         tags = Tags.objects.all()
         return tags
+
+    @staticmethod
+    def update_tag_name(tag, data):
+        tag.name = data['name']
+        tag.row_last_updated = datetime.now()
+        tag.save()
+        return tag

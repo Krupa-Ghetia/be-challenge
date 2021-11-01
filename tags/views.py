@@ -81,7 +81,43 @@ class TagsView(APIView):
             )
 
     def put(self, request, pk):
-        pass
+        tag = TagRepository.get_tag_by_id(pk)
+        if not user_is_instructor(request.user) or not user_is_author(request.user, tag):
+            return Response(
+                status=status.HTTP_403_FORBIDDEN,
+                data={
+                    'message': "PERMISSION DENIED! You should be an authorized instructur to update the tag"
+                }
+            )
+        try:
+            serializer = ValidateTagName(data=request.data)
+            if not serializer.is_valid():
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data=serializer.errors
+                )
+            validated_data = serializer.validated_data
+            if TagRepository.tag_already_exists(validated_data):
+                return Response(
+                    status=status.HTTP_409_CONFLICT,
+                    data={
+                        "msg": "Tag already exists!"
+                    }
+                )
+            tag = TagRepository.update_tag_name(tag, validated_data)
+            return Response(
+                status=status.HTTP_200_OK,
+                data={
+                    'id': tag.id
+                }
+            )
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'errors': e
+                }
+            )
 
     def delete(self, request, pk):
         tag = TagRepository.get_tag_by_id(pk)
