@@ -14,12 +14,15 @@ from users.utils import user_is_instructor, user_is_author
 class VideoView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, pk=None):
+    def get(self, request, lesson=None, pk=None):
         try:
             if pk:
                 video = VideoRepository.get_video_by_id(pk)
                 video = VideoRepository.update_video_view_count(video)
                 serializer = VideoSerializer(video)
+            elif lesson:
+                videos = VideoRepository.get_videos_by_lesson(lesson, request.user, request.query_params)
+                serializer = VideoSerializer(videos, many=True)
             else:
                 videos = VideoRepository.get_all_videos()
                 serializer = VideoSerializer(videos, many=True)

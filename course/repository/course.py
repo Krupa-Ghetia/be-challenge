@@ -55,8 +55,13 @@ class CourseRepository:
         return get_object_or_404(Course, subjects__id=subject_id, id=course_id)
 
     @staticmethod
-    def get_all_courses():
-        return Course.objects.all()
+    def get_all_courses(user):
+        courses = Course.objects.all()
+
+        if not user.is_instructor:
+            courses = courses.filter(is_active=True)
+            return courses
+        return courses
 
     @staticmethod
     def get_most_viewed_courses():

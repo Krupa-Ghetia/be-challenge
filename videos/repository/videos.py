@@ -87,3 +87,21 @@ class VideoRepository:
         video.row_last_updated = datetime.now()
         video.save()
         return video
+
+    @staticmethod
+    def get_videos_by_lesson(lesson_id, user, query_params):
+        try:
+            videos = Videos.objects.filter(lessons__id=lesson_id)
+        except ObjectDoesNotExist:
+            raise Http404("Lesson does not exist")
+
+        if 'title' in query_params:
+            videos = videos.filter(title=query_params.get('title'))
+
+        if 'tag' in query_params:
+            videos = videos.filter(tags__name=query_params.get('tag'))
+
+        if not user.is_instructor:
+            videos = videos.filter(is_active=True)
+            return videos
+        return videos

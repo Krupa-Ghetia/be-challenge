@@ -23,7 +23,7 @@ class CourseView(APIView):
                 courses = CourseRepository.get_courses_by_subject(subject, request.user)
                 serializer = CourseSerializer(courses, many=True)
             else:
-                courses = CourseRepository.get_all_courses()
+                courses = CourseRepository.get_all_courses(request.user)
                 serializer = CourseSerializer(courses, many=True)
 
             return Response(
