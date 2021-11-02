@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 
 
-from course.models import Course
+from course.models import Course, CourseSubscription
 from subjects.repository.subjects import SubjectsRepository
 
 
@@ -97,3 +97,21 @@ class CourseRepository:
         course.save()
         return course
 
+    @staticmethod
+    def get_subscribed_courses(user):
+        subscribed_courses = CourseSubscription.objects.filter(user_id=user.id, has_subscribed=True)
+        return subscribed_courses
+
+    @staticmethod
+    def subscribe_unsubscribe_course(course_id, user, data):
+        if CourseSubscription.objects.filter(course_id=course_id, user_id=user.id).exists():
+            subscribed_course = CourseSubscription.objects.get(course_id=course_id, user_id=user.id)
+            subscribed_course.has_subscribed = data['has_subscribed']
+            subscribed_course.row_last_updated = datetime.now()
+            subscribed_course.save()
+        else:
+            subscribed_course = CourseSubscription(course_id=course_id, user_id=user.id,
+                                                   has_subscribed=data['has_subscribed'])
+            subscribed_course.save()
+
+        return subscribed_course

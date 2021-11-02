@@ -17,3 +17,15 @@ class Course(models.Model):
     class Meta:
         verbose_name = 'Course'
         verbose_name_plural = 'Courses'
+
+
+class CourseSubscription(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    has_subscribed = models.BooleanField(default=True)
+    row_created = models.DateTimeField(default=datetime.now)
+    row_last_updated = models.DateTimeField(default=datetime.now)
+
+    class Meta:
+        verbose_name = 'Course_subscription'
+        verbose_name_plural = 'Courses_subscription'
