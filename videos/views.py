@@ -1,10 +1,9 @@
-import json
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.http import Http404
+import logging
 
 from videos.repository.videos import VideoRepository
 from videos.serializers.videos import (
@@ -12,11 +11,14 @@ from videos.serializers.videos import (
     ValidateVideoActiveStatus, ValidateVideoTags, ValidateVideoLessons)
 from users.utils import user_is_instructor, user_is_author
 
+logger = logging.getLogger('be_challenge')
+
 
 class VideoView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, lesson=None, pk=None):
+        logger.info(f"Request:GET Model:Videos")
         try:
             recommended_courses = {}
             if pk:
@@ -38,6 +40,7 @@ class VideoView(APIView):
                 }
             )
         except Http404 as e:
+            logger.error("Request:GET Model:Videos Errors: Video does not exist")
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
@@ -45,6 +48,7 @@ class VideoView(APIView):
                 }
             )
         except Exception as e:
+            logger.error(f"Request:GET Model:Video Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -53,7 +57,9 @@ class VideoView(APIView):
             )
 
     def post(self, request):
+        logger.info("Request:POST Model:Video")
         if not user_is_instructor(request.user):
+            logger.error("Request:POST Model:Video Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -71,6 +77,7 @@ class VideoView(APIView):
 
         try:
             if VideoRepository.video_already_exists(validated_data):
+                logger.error("Request:POST Model:Video Error: Video already exists")
                 return Response(
                     status=status.HTTP_409_CONFLICT,
                     data={
@@ -85,6 +92,7 @@ class VideoView(APIView):
                 }
             )
         except Http404 as e:
+            logger.error("Request:POST Model:Video Errors: Lesson object not found")
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
@@ -93,6 +101,7 @@ class VideoView(APIView):
             )
 
         except Exception as e:
+            logger.error(f"Request:POST Model:Lesson Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -101,8 +110,10 @@ class VideoView(APIView):
             )
 
     def put(self, request, pk):
+        logger.error(f"Request:PUT Model:Video")
         video = VideoRepository.get_video_by_id(pk)
         if not user_is_instructor(request.user) or not user_is_author(request.user, video):
+            logger.error("Request:PUT Model:Video Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -112,6 +123,7 @@ class VideoView(APIView):
         try:
             # Update video title
             if 'title' in request.data:
+                logger.info("Request:PUT Model:Video Message:Update Video title")
                 serializer = ValidateVideoTitle(data=request.data)
                 if not serializer.is_valid():
                     return Response(
@@ -120,6 +132,7 @@ class VideoView(APIView):
                     )
                 validated_data = serializer.validated_data
                 if VideoRepository.video_already_exists(validated_data):
+                    logger.error("Request:PUT Model:Video Error: Video already exists")
                     return Response(
                         status=status.HTTP_409_CONFLICT,
                         data={
@@ -130,6 +143,7 @@ class VideoView(APIView):
 
             # Update video link
             if 'link' in request.data:
+                logger.info("Request:PUT Model:Video Message:Update Video link")
                 serializer = ValidateVideoLink(data=request.data)
                 if not serializer.is_valid():
                     return Response(
@@ -141,6 +155,7 @@ class VideoView(APIView):
 
             # Update video active status
             if 'is_active' in request.data:
+                logger.info("Request:PUT Model:Video Message:Update Video active status")
                 serializer = ValidateVideoActiveStatus(data=request.data)
                 if not serializer.is_valid():
                     return Response(
@@ -152,6 +167,7 @@ class VideoView(APIView):
 
             # Update video tags
             if 'tags' in request.data:
+                logger.info("Request:PUT Model:Video Message:Update Video tags")
                 serializer = ValidateVideoTags(data=request.data)
                 if not serializer.is_valid():
                     return Response(
@@ -163,6 +179,7 @@ class VideoView(APIView):
 
             # Update video lessons
             if 'lessons' in request.data:
+                logger.info("Request:PUT Model:Video Message:Update Video lessons")
                 serializer = ValidateVideoLessons(data=request.data)
                 if not serializer.is_valid():
                     return Response(
@@ -180,6 +197,7 @@ class VideoView(APIView):
             )
 
         except Http404 as e:
+            logger.error("Request:PUT Model:Video Errors: Lesson object not found")
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
@@ -187,6 +205,7 @@ class VideoView(APIView):
                 }
             )
         except Exception as e:
+            logger.error(f"Request:PUT Model:Courses Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -195,8 +214,10 @@ class VideoView(APIView):
             )
 
     def delete(self, request, pk):
+        logger.info(f"Request:DELETE Model:Video")
         video = VideoRepository.get_video_by_id(pk)
         if not user_is_instructor(request.user) or not user_is_author(request.user, video):
+            logger.error("Request:DELETE Model:Video Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -209,6 +230,7 @@ class VideoView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         except Exception as e:
+            logger.error(f"Request:DELETE Model:Video Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -221,7 +243,9 @@ class VideoAnalyticsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
+        logger.info(f"Request:GET Model:Video Message:Get Analytics ")
         if not user_is_instructor(request.user):
+            logger.error("Request:GET Model:Video Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -238,6 +262,7 @@ class VideoAnalyticsView(APIView):
                 data=serializer.data
             )
         except Exception as e:
+            logger.error(f"Request:GET Model:Video Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={

@@ -140,3 +140,31 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     )
 }
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "detailed": {
+            "format": "%(levelname)s [%(asctime)s] %(message)s",
+            "datefmt": "%d/%b/%Y"
+        },
+    },
+    "handlers": {
+        "be_challenge_handler": {
+            "level": "INFO",
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "detailed",
+            "filename": f"{Path(os.getcwd()).parent}/logs/be_challenge.logs",
+            "maxBytes": 2000000,
+            "backupCount": 2,
+        },
+    },
+    "loggers": {
+        "be_challenge": {
+            "handlers": ["be_challenge_handler"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}

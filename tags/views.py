@@ -3,16 +3,20 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.http import Http404
+import logging
 
 from tags.repository.tags import TagRepository
 from tags.serializers.tags import TagSerializer, ValidateTagName
 from users.utils import user_is_instructor, user_is_author
+
+logger = logging.getLogger('be_challenge')
 
 
 class TagsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, pk=None):
+        logger.info(f"Request:GET Model:Tags")
         try:
             if pk:
                 tag = TagRepository.get_tag_by_id(pk)
@@ -26,6 +30,7 @@ class TagsView(APIView):
                 data=serializer.data
             )
         except Http404 as e:
+            logger.error("Request:GET Model:Tags Errors: Tag does not exist")
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
@@ -33,6 +38,7 @@ class TagsView(APIView):
                 }
             )
         except Exception as e:
+            logger.error(f"Request:GET Model:Tags Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -41,7 +47,9 @@ class TagsView(APIView):
             )
 
     def post(self, request):
+        logger.info("Request:POST Model:Tags")
         if not user_is_instructor(request.user):
+            logger.error("Request:POST Model:Tags Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -58,6 +66,7 @@ class TagsView(APIView):
 
         try:
             if TagRepository.tag_already_exists(validated_data):
+                logger.error("Request:POST Model:Tags Error: Tag already exists")
                 return Response(
                     status=status.HTTP_409_CONFLICT,
                     data={
@@ -73,6 +82,7 @@ class TagsView(APIView):
             )
 
         except Exception as e:
+            logger.error(f"Request:POST Model:Tag Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -81,8 +91,10 @@ class TagsView(APIView):
             )
 
     def put(self, request, pk):
+        logger.error(f"Request:PUT Model:Tags")
         tag = TagRepository.get_tag_by_id(pk)
         if not user_is_instructor(request.user) or not user_is_author(request.user, tag):
+            logger.error("Request:PUT Model:Tags Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -98,6 +110,7 @@ class TagsView(APIView):
                 )
             validated_data = serializer.validated_data
             if TagRepository.tag_already_exists(validated_data):
+                logger.error("Request:PUT Model:Tag Error: Tag already exists")
                 return Response(
                     status=status.HTTP_409_CONFLICT,
                     data={
@@ -112,6 +125,7 @@ class TagsView(APIView):
                 }
             )
         except Exception as e:
+            logger.error(f"Request:PUT Model:Tag Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -120,8 +134,10 @@ class TagsView(APIView):
             )
 
     def delete(self, request, pk):
+        logger.info(f"Request:DELETE Model:Tags")
         tag = TagRepository.get_tag_by_id(pk)
         if not user_is_instructor(request.user) or not user_is_author(request.user, tag):
+            logger.error("Request:DELETE Model:Tags Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -133,6 +149,7 @@ class TagsView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         except Exception as e:
+            logger.error(f"Request:DELETE Model:Subject Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
