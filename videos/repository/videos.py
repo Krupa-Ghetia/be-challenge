@@ -105,3 +105,16 @@ class VideoRepository:
             videos = videos.filter(is_active=True)
             return videos
         return videos
+
+    @staticmethod
+    def get_recommended_courses(video):
+        recommended_courses = []
+        lessons = video.lessons.all()
+
+        for lesson in lessons:
+            recommended_courses += list(lesson.courses.all())
+
+        recommended_courses = list(set(recommended_courses))
+        recommended_courses = {course.id: course.name for course in recommended_courses}
+
+        return recommended_courses

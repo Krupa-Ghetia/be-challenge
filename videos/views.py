@@ -1,3 +1,5 @@
+import json
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,9 +18,11 @@ class VideoView(APIView):
 
     def get(self, request, lesson=None, pk=None):
         try:
+            recommended_courses = {}
             if pk:
                 video = VideoRepository.get_video_by_id(pk)
                 video = VideoRepository.update_video_view_count(video)
+                recommended_courses = VideoRepository.get_recommended_courses(video)
                 serializer = VideoSerializer(video)
             elif lesson:
                 videos = VideoRepository.get_videos_by_lesson(lesson, request.user, request.query_params)
@@ -28,7 +32,10 @@ class VideoView(APIView):
                 serializer = VideoSerializer(videos, many=True)
             return Response(
                 status=status.HTTP_200_OK,
-                data=serializer.data
+                data={
+                    'video': serializer.data,
+                    'recommended_courses': recommended_courses
+                }
             )
         except Http404 as e:
             return Response(
