@@ -3,3 +3,5 @@ venv/
 .env
 .env.db
 data/
+logs/
+.pytest_cache/
