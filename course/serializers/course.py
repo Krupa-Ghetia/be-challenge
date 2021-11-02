@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from course.models import Course
+from course.models import Course, CourseSubscription
 from subjects.serializers.subjects import SubjectsSerializer
 
 
@@ -9,7 +9,14 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['id', 'name', 'is_active', 'created_by', 'subjects']
+        fields = ['id', 'name', 'is_active', 'view_count', 'created_by', 'subjects']
+
+
+class CourseSubscriptionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CourseSubscription
+        fields = ['id', 'course', 'user', 'has_subscribed']
 
 
 class CourseDtoSerializer(serializers.Serializer):
@@ -28,3 +35,7 @@ class ValidateCourseActiveStatus(serializers.Serializer):
 
 class ValidateCourseSubjects(serializers.Serializer):
     subjects = serializers.ListField(allow_empty=True)
+
+
+class ValidateSubscriptionStatus(serializers.Serializer):
+    has_subscribed = serializers.BooleanField(default=False)

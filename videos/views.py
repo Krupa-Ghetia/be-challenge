@@ -1,3 +1,5 @@
+import json
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,17 +16,26 @@ from users.utils import user_is_instructor, user_is_author
 class VideoView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, pk=None):
+    def get(self, request, lesson=None, pk=None):
         try:
+            recommended_courses = {}
             if pk:
                 video = VideoRepository.get_video_by_id(pk)
+                video = VideoRepository.update_video_view_count(video)
+                recommended_courses = VideoRepository.get_recommended_courses(video)
                 serializer = VideoSerializer(video)
+            elif lesson:
+                videos = VideoRepository.get_videos_by_lesson(lesson, request.user, request.query_params)
+                serializer = VideoSerializer(videos, many=True)
             else:
                 videos = VideoRepository.get_all_videos()
                 serializer = VideoSerializer(videos, many=True)
             return Response(
                 status=status.HTTP_200_OK,
-                data=serializer.data
+                data={
+                    'video': serializer.data,
+                    'recommended_courses': recommended_courses
+                }
             )
         except Http404 as e:
             return Response(
@@ -202,5 +213,34 @@ class VideoView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
                     'error': e
+                }
+            )
+
+
+class VideoAnalyticsView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        if not user_is_instructor(request.user):
+            return Response(
+                status=status.HTTP_403_FORBIDDEN,
+                data={
+                    'message': "PERMISSION DENIED! You should be an instructur to view analytics"
+                }
+            )
+
+        try:
+            videos = VideoRepository.get_most_viewed_videos()
+            serializer = VideoSerializer(videos, many=True)
+
+            return Response(
+                status=status.HTTP_200_OK,
+                data=serializer.data
+            )
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'errors': e
                 }
             )

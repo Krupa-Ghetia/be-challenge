@@ -41,6 +41,10 @@ class VideoRepository:
         return videos
 
     @staticmethod
+    def get_most_viewed_videos():
+        return Videos.objects.filter(view_count__gt=0).order_by('-view_count')
+
+    @staticmethod
     def update_video_title(video, data):
         video.title = data['title']
         video.row_last_updated = datetime.now()
@@ -76,3 +80,41 @@ class VideoRepository:
             video.lessons.add(lesson)
         video.row_last_updated = datetime.now()
         return video
+
+    @staticmethod
+    def update_video_view_count(video):
+        video.view_count += 1
+        video.row_last_updated = datetime.now()
+        video.save()
+        return video
+
+    @staticmethod
+    def get_videos_by_lesson(lesson_id, user, query_params):
+        try:
+            videos = Videos.objects.filter(lessons__id=lesson_id)
+        except ObjectDoesNotExist:
+            raise Http404("Lesson does not exist")
+
+        if 'title' in query_params:
+            videos = videos.filter(title=query_params.get('title'))
+
+        if 'tag' in query_params:
+            videos = videos.filter(tags__name=query_params.get('tag'))
+
+        if not user.is_instructor:
+            videos = videos.filter(is_active=True)
+            return videos
+        return videos
+
+    @staticmethod
+    def get_recommended_courses(video):
+        recommended_courses = []
+        lessons = video.lessons.all()
+
+        for lesson in lessons:
+            recommended_courses += list(lesson.courses.all())
+
+        recommended_courses = list(set(recommended_courses))
+        recommended_courses = {course.id: course.name for course in recommended_courses}
+
+        return recommended_courses

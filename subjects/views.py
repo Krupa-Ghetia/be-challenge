@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django.http import Http404
 
 from subjects.repository.subjects import SubjectsRepository
 from subjects.serializers.subjects import SubjectsSerializer, ValidateSubjectName
@@ -12,19 +13,35 @@ class SubjectsView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, pk=None):
-        if pk:
-            subject = SubjectsRepository.get_subject_by_id(pk)
-            serializer = SubjectsSerializer(subject)
-        else:
-            subjects = SubjectsRepository.get_all_subjects()
-            serializer = SubjectsSerializer(subjects, many=True)
+        try:
+            if pk:
+                subject = SubjectsRepository.get_subject_by_id(pk)
+                serializer = SubjectsSerializer(subject)
+            else:
+                subjects = SubjectsRepository.get_all_subjects()
+                serializer = SubjectsSerializer(subjects, many=True)
 
-        return Response(
-            status=status.HTTP_200_OK,
-            data={
-                'subjects': serializer.data
-            }
-        )
+            return Response(
+                status=status.HTTP_200_OK,
+                data={
+                    'subjects': serializer.data
+                }
+            )
+
+        except Http404 as e:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={
+                    'errors': 'Lesson does not exist!'
+                }
+            )
+        except Exception as e:
+            return Response(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                data={
+                    'errors': e
+                }
+            )
 
     def post(self, request):
         if not user_is_instructor(request.user):

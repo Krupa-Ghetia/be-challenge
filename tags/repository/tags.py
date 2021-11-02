@@ -20,7 +20,9 @@ class TagRepository:
 
     @staticmethod
     def get_or_create_tag(tag_name, user):
-        tag, status = Tags.objects.get_or_create(name=tag_name, created_by_id=user.id)
+        if Tags.objects.filter(name=tag_name).exists():
+            return Tags.objects.get(name=tag_name)
+        tag = Tags.objects.create(name=tag_name, created_by_id=user.id)
         return tag
 
     @staticmethod
