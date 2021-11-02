@@ -3,17 +3,21 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.http import Http404
+import logging
 
 from lessons.repository.lessons import LessonsRepository
 from lessons.serializers.lessons import (
     LessonsSerializer, LessonsDtoSerializer, ValidateLessonName, ValidateLessonActiveStatus, ValidateLessonCourses)
 from users.utils import user_is_instructor, user_is_author
 
+logger = logging.getLogger('be_challenge')
+
 
 class LessonView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, course=None, pk=None):
+        logger.info(f"Request:GET Model:Lesson")
         try:
             if pk:
                 lesson = LessonsRepository.get_lesson_by_id(pk)
@@ -33,6 +37,7 @@ class LessonView(APIView):
             )
 
         except Http404 as e:
+            logger.error("Request:GET Model:Lesson Errors: Lesson does not exist")
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
@@ -40,6 +45,7 @@ class LessonView(APIView):
                 }
             )
         except Exception as e:
+            logger.error(f"Request:GET Model:Lessons Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -48,7 +54,9 @@ class LessonView(APIView):
             )
 
     def post(self, request):
+        logger.info("Request:POST Model:Lessons")
         if not user_is_instructor(request.user):
+            logger.error("Request:POST Model:Lessons Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -66,6 +74,7 @@ class LessonView(APIView):
 
         try:
             if LessonsRepository.lesson_already_exists(validated_data):
+                logger.error("Request:POST Model:Lesson Error: Lesson already exists")
                 return Response(
                     status=status.HTTP_409_CONFLICT,
                     data={
@@ -81,6 +90,7 @@ class LessonView(APIView):
             )
 
         except Http404 as e:
+            logger.error("Request:POST Model:Lessons Errors: Course does not exist")
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
@@ -89,6 +99,7 @@ class LessonView(APIView):
             )
 
         except Exception as e:
+            logger.error(f"Request:POST Model:Lesson Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -97,8 +108,10 @@ class LessonView(APIView):
             )
 
     def put(self, request, pk):
+        logger.error(f"Request:PUT Model:Lesson")
         lesson = LessonsRepository.get_lesson_by_id(pk)
         if not user_is_instructor(request.user) or not user_is_author(request.user, lesson):
+            logger.error("Request:PUT Model:Lesson Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -109,6 +122,7 @@ class LessonView(APIView):
         try:
             # Update lesson name
             if 'name' in request.data:
+                logger.info("Request:PUT Model:Lesson Message:Update lesson name")
                 serializer = ValidateLessonName(data=request.data)
                 if not serializer.is_valid():
                     return Response(
@@ -118,6 +132,7 @@ class LessonView(APIView):
                 validated_data = serializer.validated_data
 
                 if LessonsRepository.lesson_already_exists(validated_data):
+                    logger.error("Request:PUT Model:Lesson Error: Lesson already exists")
                     return Response(
                         status=status.HTTP_409_CONFLICT,
                         data={
@@ -128,6 +143,7 @@ class LessonView(APIView):
 
             # Update course active status
             if 'is_active' in request.data:
+                logger.info("Request:PUT Model:Lesson Message:Update lesson active status")
                 serializer = ValidateLessonActiveStatus(data=request.data)
                 if not serializer.is_valid():
                     return Response(
@@ -140,6 +156,7 @@ class LessonView(APIView):
 
             # Add course subjects
             if 'courses' in request.data:
+                logger.info("Request:PUT Model:Lesson Message:Update lesson courses")
                 serializer = ValidateLessonCourses(data=request.data)
                 if not serializer.is_valid():
                     return Response(
@@ -157,6 +174,7 @@ class LessonView(APIView):
                 }
             )
         except Http404 as e:
+            logger.error("Request:PUT Model:Lessons Errors: Course does not exist")
             return Response(
                 status=status.HTTP_404_NOT_FOUND,
                 data={
@@ -164,6 +182,7 @@ class LessonView(APIView):
                 }
             )
         except Exception as e:
+            logger.error(f"Request:PUT Model:Courses Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
@@ -172,8 +191,10 @@ class LessonView(APIView):
             )
 
     def delete(self, request, pk):
+        logger.info(f"Request:DELETE Model:Lessons")
         lesson = LessonsRepository.get_lesson_by_id(pk)
         if not user_is_instructor(request.user) or not user_is_author(request.user, lesson):
+            logger.error("Request:DELETE Model:Lessons Error: PERMISSION DENIED!")
             return Response(
                 status=status.HTTP_403_FORBIDDEN,
                 data={
@@ -186,6 +207,7 @@ class LessonView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         except Exception as e:
+            logger.error(f"Request:DELETE Model:Lessons Error: {e}")
             return Response(
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 data={
