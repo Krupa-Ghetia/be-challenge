@@ -13,15 +13,10 @@ You need to build a Rest API where Instructors and Students can manage their Cou
 ### Instructor
 
 - [x] As logged in instructor, I can create, view, edit, delete Tags.
-
 - [x] As logged in instructor, I can create, view, edit, delete Subjects.
-
 - [x] As logged in instructor, I can create, view, edit, delete Courses.
-
 - [x] As logged in instructor, I can create, view, edit, delete Lesson.
-
 - [x] As logged in instructor, I can create, view, edit, delete Videos.
-
 - [x] As logged in instructor, I can view analytics - most viewed Courses and Videos.
 
 
